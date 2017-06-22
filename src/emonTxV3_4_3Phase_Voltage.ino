@@ -202,7 +202,7 @@ const int networkGroup = 210;                    //  wireless network group
 const int UNO = 1;                               // Set to 0 if you are not using the UNO bootloader
                                                  // (i.e using Duemilanove) - All Atmega's shipped from
                                                  // OpenEnergyMonitor come with Arduino Uno bootloader
-const byte TIME_BETWEEN_READINGS = 10;           // Time between readings
+const byte TIME_BETWEEN_READINGS = 9;           // Time between readings
 
 #define CT4LINE 1                                // Set this to 1, 2, or 3 depending on the Line to which the CT4 load is connected.
                                                  //  The default is 1
@@ -301,7 +301,7 @@ Irms4,
 Vrms;
 
 
-typedef struct { int power1, power2, power3, power4, Vrms, temp[MAXONEWIRE]; unsigned long pulseCount; } PayloadTX;
+typedef struct { int power1, power2, power3, power4, current1, current2, current3, current4, pF1, pF2, pF3, pF4, Vrms, temp[MAXONEWIRE]; unsigned long pulseCount; } PayloadTX;
                                                  // packaging data for RF comms
                                                  // Include all the variables that are desired, chosen from the list above;
                                                  // ensure the same struct or corresponding emonhub.conf node decoder settings are used to receive,
@@ -570,6 +570,14 @@ void loop()
     emontx.power2 = realPower2;
     emontx.power3 = realPower3;
     emontx.power4 = realPower4;
+    emontx.current1 = Irms1*100;
+    emontx.current2 = Irms2*100;
+    emontx.current3 = Irms3*100;
+    emontx.current4 = Irms3*100;
+    emontx.pF1 = powerFactor1 * 100;
+    emontx.pF2 = powerFactor2 * 100;
+    emontx.pF3 = powerFactor3 * 100;
+    emontx.pF4 = powerFactor4 * 100;
     emontx.Vrms   = Vrms * 100;
     digitalWrite(LEDpin, HIGH); delay(2); digitalWrite(LEDpin, LOW);      // flash LED
 
