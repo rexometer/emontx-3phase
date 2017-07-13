@@ -127,8 +127,8 @@ emonhub.conf node decoder settings for this sketch:
 // #define DEBUGGING                             // enable this line to include debugging print statements
                                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
 
-#define SERIALPRINT                              // include 'human-friendly' print statement for commissioning - comment this line to exclude.
-                                                 //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
+// #define SERIALPRINT                              // include 'human-friendly' print statement for commissioning - comment this line to exclude.
+#define EMONESP                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
 
 #define USEPULSECOUNT                            // include the ability to count pulses. Comment this line if pulse counting is not required.
 #define PULSEINT 1                               // Interrupt no. for pulse counting: EmonTx V2 = 1, EmonTx V3.2(RFu) = 0, EmonTx V3.4 = 1, EmonTx Shield - see Wiki
@@ -497,10 +497,22 @@ void loop()
     #endif  // if defined SERIALOUT && !defined EMONESP
 
     #if defined EMONESP && !defined SERIALOUT
-    Serial.print("ct1:"); Serial.print(realPower1);            // These for compatibility, but whatever you need if the receiver is configured to suit.
-    Serial.print(",ct2:"); Serial.print(realPower2);
-    Serial.print(",ct3:"); Serial.print(realPower3);
-    Serial.print(",ct4:"); Serial.print(realPower4);
+    Serial.print("ct1_power:"); Serial.print(realPower1);            // These for compatibility, but whatever you need if the receiver is configured to suit.
+    Serial.print(",ct2_power:"); Serial.print(realPower2);
+    Serial.print(",ct3_power:"); Serial.print(realPower3);
+    Serial.print(",ct4_power:"); Serial.print(realPower4);
+    Serial.print(",ct1_apparentPower:"); Serial.print(apparentPower1);            // These for compatibility, but whatever you need if the receiver is configured to suit.
+    Serial.print(",ct2_apparentPower:"); Serial.print(apparentPower2);
+    Serial.print(",ct3_apparentPower:"); Serial.print(apparentPower3);
+    Serial.print(",ct4_apparentPower:"); Serial.print(apparentPower4);
+    Serial.print(",ct1_Irms:"); Serial.print(Irms1);            // These for compatibility, but whatever you need if the receiver is configured to suit.
+    Serial.print(",ct2_Irms:"); Serial.print(Irms2);
+    Serial.print(",ct3_Irms:"); Serial.print(Irms3);
+    Serial.print(",ct4_Irms:"); Serial.print(Irms4);
+    Serial.print(",ct1_powerFactor:"); Serial.print(powerFactor1);            // These for compatibility, but whatever you need if the receiver is configured to suit.
+    Serial.print(",ct2_powerFactor:"); Serial.print(powerFactor2);
+    Serial.print(",ct3_powerFactor:"); Serial.print(powerFactor3);
+    Serial.print(",ct4_powerFactor:"); Serial.print(powerFactor4);
     Serial.print(",vrms:"); Serial.print(Vrms);
     if (numSensors){
         for(byte j=0;j<numSensors;j++)
