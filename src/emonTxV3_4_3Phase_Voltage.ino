@@ -118,7 +118,7 @@ emonhub.conf node decoder settings for this sketch:
     nodename = 3phase
     [[[rx]]]
        names = powerL1, powerL2, powerL3, power4, Vrms, temp1, temp2, temp3, temp4, temp5, temp6, pulse
-       datacode = h,h,h,h,h,h,h,h,h,h,h,L
+       datacodes = h,h,h,h,h,h,h,h,h,h,h,L
        scales = 1,1,1,1,0.01,0.1,0.1,0.1,0.1,0.1,0.1,1
        units =W,W,W,W,V,C,C,C,C,C,C,p
 
@@ -202,7 +202,7 @@ const int networkGroup = 210;                    //  wireless network group
 const int UNO = 1;                               // Set to 0 if you are not using the UNO bootloader
                                                  // (i.e using Duemilanove) - All Atmega's shipped from
                                                  // OpenEnergyMonitor come with Arduino Uno bootloader
-const byte TIME_BETWEEN_READINGS = 10;           // Time between readings
+const byte TIME_BETWEEN_READINGS = 5;           // Time between readings
 
 #define CT4LINE 1                                // Set this to 1, 2, or 3 depending on the Line to which the CT4 load is connected.
                                                  //  The default is 1
