@@ -212,7 +212,7 @@ const byte TIME_BETWEEN_READINGS = 10;           // Time between readings
 
 #define PHASE2 6                                 //  Number of samples delay for L2
 
-#define PHASE3 15                                //  Number of samples delay for L3
+#define PHASE3 12                                //  Number of samples delay for L3
                                                  //  These can be adjusted if the phase correction is not adequate
                                                  //  Suggested starting values for 3 ct's  [4 ct's]:
                                                  //    PHASE2                         7    [   6  ]
@@ -229,11 +229,11 @@ const byte TIME_BETWEEN_READINGS = 10;           // Time between readings
 
 // Calibration coefficients for emonTx V3
 // These need to be set in order to obtain accurate results
-double Vcal = 250.3;                             // Calibration constant for voltage input
-double Ical1 = 93.5;                             // Calibration constant for current transformer 1
-double Ical2 = 93.5;                             // Calibration constant for current transformer 2
-double Ical3 = 93.5;                             // Calibration constant for current transformer 3
-double Ical4 = 17.5;                             // Calibration constant for current transformer 4
+double Vcal = 249.5;                             // Calibration constant for voltage input
+double Ical1 = 91.5;                             // Calibration constant for current transformer 1
+double Ical2 = 91.5;                             // Calibration constant for current transformer 2
+double Ical3 = 91.5;                             // Calibration constant for current transformer 3
+double Ical4 = 17.0;                             // Calibration constant for current transformer 4
 #endif
 
 #ifdef EMONTX_SHIELD
@@ -250,10 +250,10 @@ double Ical4 = 16.6;                             // Calibration constant for cur
 #endif
 
 // Calibration coefficients common to all versions - see comments above
-double Phasecal1 = 1.04;                         // Calibration constant for phase shift L1
-double Phasecal2 = 1.45;                         // Calibration constant for phase shift L2
-double Phasecal3 = 1.55;                         // Calibration constant for phase shift L3
-double Phasecal4 = 1.16;                         // Calibration constant for phase shift CT 4
+double Phasecal1 = 1.00;                         // Calibration constant for phase shift L1
+double Phasecal2 = 0.92;                         // Calibration constant for phase shift L2
+double Phasecal3 = 0.95;                         // Calibration constant for phase shift L3
+double Phasecal4 = 1.20;                         // Calibration constant for phase shift CT 4
 
 
 #include <avr/wdt.h>                             // the UNO bootloader
