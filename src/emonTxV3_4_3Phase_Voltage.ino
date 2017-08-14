@@ -27,6 +27,7 @@ V0.10 31/1/2017    Added ESP  WiFi module support - Glyn Hudson. Temp fault code
                    850 although in range, might indicate a wiring fault.
                    Pulse counting added. (RW)
 V0.11 13/02/2017  Changed newline line endings for newline + carriage return line endings https://community.openenergymonitor.org/t/3-phase-serial-connection-emonhub-query/3099?u=pb66
+V0.12 14/08/2017  Added serial direct connection and second nodeID with extended data
 
 emonTx documentation: http://wiki.openenergymonitor.org/index.php/Main_Page#Monitoring_Nodes
 emonTx firmware code explanation: http://openenergymonitor.org/emon/modules/emontx/firmware
@@ -122,6 +123,13 @@ emonhub.conf node decoder settings for this sketch:
        scales = 1,1,1,1,0.01,0.1,0.1,0.1,0.1,0.1,0.1,1
        units =W,W,W,W,V,C,C,C,C,C,C,p
 
+[[15]]
+     nodename = 3phase_extended
+     [[[rx]]]
+        names = apparentPowerL1, apparentPowerL2, apparentPowerL3, apparentPower4, Current1, Current2, Current3, Current4, powerFactor1, powerFactor2, powerFactor3, powerFactor4
+        datacodes = h,h,h,h,h,h,h,h,h,h,h,h
+        scales = 1,1,1,1,0.01,0.01,0.01,0.01,0.1,0.1,0.1,0.1
+        units =W,W,W,W,A,A,A,A,C,C,C,C
 
 */
 // #define DEBUGGING                             // enable this line to include debugging print statements
@@ -344,6 +352,12 @@ const byte PulseMinPeriod = 110;                 // minimum period between pulse
 #undef DEBUGGING
 #endif
 
+#ifdef DIRECTCONNECT
+#undef EMONESP
+#undef SERIALPRINT                               // Must not corrupt serial output to emonHub with 'human-friendly' printout
+#undef SERIALOUT
+#undef DEBUGGING
+#endif
 
 void setup()
 {
