@@ -128,7 +128,8 @@ emonhub.conf node decoder settings for this sketch:
                                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
 
 // #define SERIALPRINT                              // include 'human-friendly' print statement for commissioning - comment this line to exclude.
-#define EMONESP                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
+//#define EMONESP                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
+#define DIRECTCONNECT
 
 #define USEPULSECOUNT                            // include the ability to count pulses. Comment this line if pulse counting is not required.
 #define PULSEINT 1                               // Interrupt no. for pulse counting: EmonTx V2 = 1, EmonTx V3.2(RFu) = 0, EmonTx V3.4 = 1, EmonTx Shield - see Wiki
@@ -193,7 +194,8 @@ emonhub.conf node decoder settings for this sketch:
 #define ASYNC_DELAY 375                          // DS18B20 conversion delay - 9bit requires 95ms, 10bit 187ms, 11bit 375ms
                                                  //   and 12bit resolution takes 750ms
 
-const int nodeID = 11;                           //  node ID for this emonTx. This sketch does NOT interrogate the DIP switch.
+const int nodeID = 13;                           //  node ID for this emonTx. This sketch does NOT interrogate the DIP switch.
+const int nodeID_extended = 15;
 
 const int networkGroup = 210;                    //  wireless network group
                                                  //  - needs to be same as emonBase and emonGLCD. OEM default is 210
@@ -302,12 +304,14 @@ Vrms;
 
 
 typedef struct { int power1, power2, power3, power4, Vrms, temp[MAXONEWIRE]; unsigned long pulseCount; } PayloadTX;
+typedef struct { int apparentPower1, apparentPower2, apparentPower3, apparentPower4, Irms1, Irms2, Irms3, Irms4, powerFactor1, powerFactor2, powerFactor3, powerFactor4; } PayloadTXextended;  //for directconnect
                                                  // packaging data for RF comms
                                                  // Include all the variables that are desired, chosen from the list above;
                                                  // ensure the same struct or corresponding emonhub.conf node decoder settings are used to receive,
                                                  // The maximum size is 60 Bytes
 
 PayloadTX emontx;                                // create an instance
+PayloadTXextended emontx_extended;
 
 # ifdef EMONTX_V3
 const int LEDpin = 6;                            // On-board emonTx LED
@@ -344,14 +348,14 @@ const byte PulseMinPeriod = 110;                 // minimum period between pulse
 void setup()
 {
     Serial.begin(9600);
-#if !defined SERIALOUT && !defined EMONESP
+#if !defined SERIALOUT && !defined EMONESP && !defined DIRECTCONNECT
     Serial.print("Set baud=115200");
 #endif
     Serial.end();
     Serial.begin(115200);
 
     wdt_enable(WDTO_8S);                     // Since we're not using JeeLib and will not sleep between samples
-#if !defined SERIALOUT && !defined EMONESP
+#if !defined SERIALOUT && !defined EMONESP && !defined DIRECTCONNECT
 #ifdef EMONTX_V3
     Serial.println(F("emonTx V3.2 & V3.4 CT1234 Voltage 3 Phase example"));
 #endif
@@ -362,28 +366,29 @@ void setup()
     Serial.println(F("with Arduino Due"));
 #endif
 #endif
-#ifdef RFM69CW
+#ifdef RFM69CW && !defined DIRECTCONNECT
     Serial.println(F("Using RFM69CW Radio"));
 #endif
 #ifdef RFM12B
     Serial.println(F("Using RFM12B Radio"));
 #endif
+    #if !defined DIRECTCONNECT
+      Serial.println(F("OpenEnergyMonitor.org"));
+      Serial.print(F("Node: "));
+      Serial.print(nodeID);
 
-    Serial.println(F("OpenEnergyMonitor.org"));
-    Serial.print(F("Node: "));
-    Serial.print(nodeID);
+      Serial.print(F(" Freq: "));
+      #ifdef RF12_868MHZ
+          Serial.print(F("868MHz"));
+      #elif defined RF12_915MHZ
+          Serial.print(F("915MHz"))
+      #else // default to 433 MHz
+          Serial.print(F("433MHz"));
+      #endif
 
-    Serial.print(F(" Freq: "));
-    #ifdef RF12_868MHZ
-        Serial.print(F("868MHz"));
-    #elif defined RF12_915MHZ
-        Serial.print(F("915MHz"))
-    #else // default to 433 MHz
-        Serial.print(F("433MHz"));
+      Serial.print(F(" Network: "));
+      Serial.println(networkGroup);
     #endif
-
-    Serial.print(F(" Network: "));
-    Serial.println(networkGroup);
 #endif  // #if !defined SERIALOUT && !defined EMONESP
 
 #if defined RFM12B || defined RFM69CW
@@ -434,7 +439,7 @@ void setup()
 
     digitalWrite(DS18B20_PWR, LOW);
 
-#if !defined SERIALOUT && !defined EMONESP
+#if !defined SERIALOUT && !defined EMONESP && !defined DIRECTCONNECT
     if (numSensors)
     {
         Serial.print("Detected Temp Sensors:  "); Serial.println(numSensors);
@@ -525,7 +530,6 @@ void loop()
     delay(50);
     #endif
 
-
     #if defined SERIALPRINT && !defined EMONESP
 
     Serial.print(F("Voltage: ")); Serial.println(Vrms);
@@ -583,11 +587,34 @@ void loop()
     emontx.power3 = realPower3;
     emontx.power4 = realPower4;
     emontx.Vrms   = Vrms * 100;
+
+    emontx_extended.apparentPower1 = apparentPower1;
+    emontx_extended.apparentPower2 = apparentPower2;
+    emontx_extended.apparentPower3 = apparentPower3;
+    emontx_extended.apparentPower4 = apparentPower4;
+    emontx_extended.Irms1 = Irms1*100;
+    emontx_extended.Irms2 = Irms2*100;
+    emontx_extended.Irms3 = Irms3*100;
+    emontx_extended.Irms4 = Irms4*100;
+    emontx_extended.powerFactor1 = powerFactor1*10;
+    emontx_extended.powerFactor2 = powerFactor2*10;
+    emontx_extended.powerFactor3 = powerFactor3*10;
+    emontx_extended.powerFactor4 = powerFactor4*10;
+
+
     digitalWrite(LEDpin, HIGH); delay(2); digitalWrite(LEDpin, LOW);      // flash LED
 
 #if defined RFM12B || defined RFM69CW
     rfm_send((byte *)&emontx, sizeof(emontx), networkGroup, nodeID);      // *SEND RF DATA*
+    delay(50);
+    rfm_send((byte *)&emontx_extended, sizeof(emontx_extended), networkGroup, nodeID_extended);
 #endif
+
+#if defined DIRECTCONNECT && !defined SERIALOUT
+send_direct_serial();
+send_direct_serial_extended();
+#endif
+
     for (int i = TIME_BETWEEN_READINGS; i > 0; i--)  // because the maximum between watchdog resets is 8 s
     {
         delay(1000);
@@ -901,3 +928,43 @@ void onPulse()
 }
 
 #endif
+
+void send_direct_serial()
+{
+  //int serialnode = serialnode;
+  //struct data = data;
+
+  byte binarray[sizeof(emontx)];
+  memcpy(binarray, &emontx, sizeof(emontx));
+
+  Serial.print(F("OK "));
+  Serial.print(nodeID);
+  for (byte i = 0; i < sizeof(binarray); i++) {
+    Serial.print(F(" "));
+    Serial.print(binarray[i]);
+  }
+  Serial.print(F(" (-0)"));
+  Serial.println();
+
+  delay(10);
+}
+
+void send_direct_serial_extended()
+{
+  //int serialnode = serialnode;
+  //struct data = data;
+
+  byte binarray[sizeof(emontx_extended)];
+  memcpy(binarray, &emontx_extended, sizeof(emontx_extended));
+
+  Serial.print(F("OK "));
+  Serial.print(nodeID_extended);
+  for (byte i = 0; i < sizeof(binarray); i++) {
+    Serial.print(F(" "));
+    Serial.print(binarray[i]);
+  }
+  Serial.print(F(" (-0)"));
+  Serial.println();
+
+  delay(10);
+}
