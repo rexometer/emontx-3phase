@@ -202,7 +202,7 @@ emonhub.conf node decoder settings for this sketch:
 #define ASYNC_DELAY 375                          // DS18B20 conversion delay - 9bit requires 95ms, 10bit 187ms, 11bit 375ms
                                                  //   and 12bit resolution takes 750ms
 
-const int nodeID = 13;                           //  node ID for this emonTx. This sketch does NOT interrogate the DIP switch.
+const int nodeID = 11;                           //  node ID for this emonTx. This sketch does NOT interrogate the DIP switch.
 const int nodeID_extended = 15;
 
 const int networkGroup = 210;                    //  wireless network group
