@@ -132,6 +132,8 @@ emonhub.conf node decoder settings for this sketch:
         units =W,W,W,W,A,A,A,A,C,C,C,C
 
 */
+
+#define USE_LPL         //define to use the LowPowerLib insetad of the Jeelib
 // #define DEBUGGING                             // enable this line to include debugging print statements
                                                  //  This is turned off when SERIALOUT or EMONESP (see below) is defined.
 
@@ -143,7 +145,50 @@ emonhub.conf node decoder settings for this sketch:
 #define PULSEINT 1                               // Interrupt no. for pulse counting: EmonTx V2 = 1, EmonTx V3.2(RFu) = 0, EmonTx V3.4 = 1, EmonTx Shield - see Wiki
 #define PULSEPIN 3                               // Interrupt input pin: EmonTx V2 = 3, EmonTx V3.2(RFu) = 2, EmonTx V3.4 = 3, EmonTx Shield - see Wiki
                                                  //  Also, set the PulseMinPeriod (below) for contact debouncing.
+#ifdef USE_LPL
+ #include <RFM69.h>    //get it here: https://www.github.com/lowpowerlab/rfm69
+ #include <RFM69_ATC.h>
+ #include <SPI.h>
 
+
+ //*********************************************************************************************
+ // *********** IMPORTANT SETTINGS - YOU MUST CHANGE/ONFIGURE TO FIT YOUR HARDWARE *************
+ //*********************************************************************************************
+ #define NETWORKID     200  // The same on all nodes that talk to each other
+ #define NODEID        11    // The unique identifier of this node
+ #define NODEID_extended        15    // The unique identifier of this node
+ #define RECEIVER      1    // The recipient of packets
+
+ //Match frequency to the hardware version of the radio on your Feather
+ #define FREQUENCY     RF69_433MHZ
+ //#define FREQUENCY     RF69_868MHZ
+ //#define FREQUENCY     RF69_915MHZ
+ #define ENCRYPTKEY    "RExometer_enckey" //exactly the same 16 characters/bytes on all nodes!
+ #define IS_RFM69HCW   false // set to 'true' if you are using an RFM69HCW module
+
+ #define ACK_TIME       50  // # of ms to wait for an ack packet
+
+ // Achtung Sendeleistungen über 15 benötigen ein extra Netzteil, deshalb sollte auch ATC nicht aktiviert werden
+ //#define ENABLE_ATC    //comment out this line to disable AUTO TRANSMISSION CONTROL
+ #define ATC_RSSI      -75  //target RSSI for RFM69_ATC (recommended > -80)
+
+ //*********************************************************************************************
+
+ #define RFM69_RST     11   // "A"
+ #define RFM69_CS      10   // "B"
+ #define RFM69_IRQ     6    // "D"
+ #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ )
+
+
+ #define SERIAL_BAUD   115200
+ #define LED           6
+
+ #ifdef ENABLE_ATC
+   RFM69_ATC radio;
+ #else
+   RFM69 radio;
+ #endif
+#endif
 
 // To enable 12-bit ADC resolution on Arduino Due,
 // include the following line
@@ -405,8 +450,35 @@ void setup()
     #endif
 #endif  // #if !defined SERIALOUT && !defined EMONESP
 
-#if defined RFM12B || defined RFM69CW
+#if (defined RFM12B || defined RFM69CW) && !defined USE_LPL
     rfm_init();
+#endif
+
+#ifdef USE_LPL
+  // Hard Reset the RFM module
+  pinMode(RFM69_RST, OUTPUT);
+  digitalWrite(RFM69_RST, HIGH);
+  delay(100);
+  digitalWrite(RFM69_RST, LOW);
+  delay(100);
+
+  // Initialize radio
+  radio.initialize(FREQUENCY,NODEID,NETWORKID);
+  if (IS_RFM69HCW) {
+    radio.setHighPower();    // Only for RFM69HCW & HW!
+  }
+
+  #ifdef ENABLE_ATC
+    radio.enableAutoPower(ATC_RSSI);
+  #endif
+  radio.setPowerLevel(15); // power output ranges from 0 (5dBm) to 31 (20dBm)
+
+  radio.encrypt(ENCRYPTKEY);
+
+  pinMode(LED, OUTPUT);
+  Serial.print("\nTransmitting at ");
+  Serial.print(FREQUENCY==RF69_433MHZ ? 433 : FREQUENCY==RF69_868MHZ ? 868 : 915);
+  Serial.println(" MHz");
 #endif
 
     DIDR0 |= 0x3F;                               // Disable digital input buffer on Analogue Inputs to save current
@@ -618,10 +690,30 @@ void loop()
 
     digitalWrite(LEDpin, HIGH); delay(2); digitalWrite(LEDpin, LOW);      // flash LED
 
-#if defined RFM12B || defined RFM69CW
+#if (defined RFM12B || defined RFM69CW) && !defined USE_LPL
     rfm_send((byte *)&emontx, sizeof(emontx), networkGroup, nodeID);      // *SEND RF DATA*
     delay(50);
     rfm_send((byte *)&emontx_extended, sizeof(emontx_extended), networkGroup, nodeID_extended);
+#endif
+
+#ifdef USE_LPL
+  if (radio.receiveDone()) {
+    Serial.print(radio.SENDERID, DEC);
+    Serial.print(" ");
+    Serial.println(radio.readRSSI());
+  }
+
+  if (radio.sendWithRetry(RECEIVER, (const void*)(&emontx), sizeof(emontx))) {
+      //Serial.print(" ok!");
+      digitalWrite(LEDpin, HIGH); delay(20); digitalWrite(LEDpin, LOW);      // flash LED
+  //} else {
+      //Serial.print(" nothing...");
+  }
+  // delay(50);
+  // if (radio.sendWithRetry(RECEIVER, (const void*)(&emontx_extended), sizeof(emontx_extended))) {
+  //     //Serial.print(" ok!");
+  //     digitalWrite(LEDpin, HIGH); delay(20); digitalWrite(LEDpin, LOW);      // flash LED
+  // }
 #endif
 
 #if defined DIRECTCONNECT && !defined SERIALOUT
