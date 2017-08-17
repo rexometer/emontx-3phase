@@ -723,7 +723,7 @@ send_direct_serial_extended();
 
     for (int i = TIME_BETWEEN_READINGS; i > 0; i--)  // because the maximum between watchdog resets is 8 s
     {
-        delay(1000);
+        delay(920);
         wdt_reset();
 
     }
